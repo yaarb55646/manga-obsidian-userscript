@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Manga → Obsidian 漫画元数据导出 (多站点)
 // @namespace    https://bakamh.com/
-// @version      1.8.2
+// @version      1.8.3
 // @description  在漫画详情页一键提取元数据 + 封面，导出为 Obsidian 兼容的 Markdown。支持 bakamh / mangacopy / komiic / baozimh / 18comic / bilibili / webtoons
 // @author       yaarb55646
 // @homepageURL  https://github.com/yaarb55646/manga-obsidian-userscript
@@ -27,14 +27,19 @@
 (function () {
     'use strict';
 
+    // 归一化到漫画库里实际使用的三种状态：完结 / 连载 / 有生之年
     const STATUS_MAP = {
-        '连载':   '连载中',
-        '连载中': '连载中',
-        '連載中': '连载中',
-        '完结':   '已完结',
-        '完結':   '已完结',
-        '已完结': '已完结',
-        '已完結': '已完结',
+        '连载':   '连载',
+        '连载中': '连载',
+        '連載中': '连载',
+        '連載':   '连载',
+        '完结':   '完结',
+        '完結':   '完结',
+        '已完结': '完结',
+        '已完結': '完结',
+        '休刊':   '有生之年',
+        '休載':   '有生之年',
+        '休载':   '有生之年',
     };
 
     const DEFAULT_AGE = '18+';
@@ -307,7 +312,7 @@
     }
 
     // ---------- BaoziMH 适配器 ----------
-    const BZ_STATUS_TAGS = ['連載中', '連載', '连载中', '连载', '已完結', '完結', '已完结', '完结'];
+    const BZ_STATUS_TAGS = ['連載中', '連載', '连载中', '连载', '已完結', '完結', '已完结', '完结', '休刊', '休載', '休载'];
     const BZ_REGION_NORM = {
         '國漫': '国漫', '国漫': '国漫',
         '日漫': '日漫',
@@ -473,11 +478,11 @@
         let chMatch = lastUpdateRaw.match(/\[完结\]\s*共\s*(\S+)\s*话/);
         if (chMatch) {
             data.总话数 = chMatch[1];
-            data.是否完结 = '已完结';
+            data.是否完结 = '完结';
         } else {
             chMatch = lastUpdateRaw.match(/更新至\s*(\S+)\s*话/);
             data.总话数 = chMatch ? chMatch[1] : '';
-            data.是否完结 = '连载中';
+            data.是否完结 = '连载';
         }
 
         // 更新时间 / 更新计划
