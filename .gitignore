@@ -1,0 +1,12 @@
+# 旧版本副本（历史留在 git 提交记录里，不作为文件跟踪）
+*- 复制.JS
+*- 复制.js
+
+# 个人文档 / 草稿，不要进公开仓库
+新建文本文档.txt
+*.draft.txt
+
+# 系统文件
+Thumbs.db
+desktop.ini
+.DS_Store
