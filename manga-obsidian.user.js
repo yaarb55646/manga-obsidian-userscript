@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Manga → Obsidian 漫画元数据导出 (多站点)
 // @namespace    https://bakamh.com/
-// @version      1.8.1
+// @version      1.8.2
 // @description  在漫画详情页一键提取元数据 + 封面，导出为 Obsidian 兼容的 Markdown。支持 bakamh / mangacopy / komiic / baozimh / 18comic / bilibili / webtoons
 // @author       yaarb55646
 // @homepageURL  https://github.com/yaarb55646/manga-obsidian-userscript
@@ -1110,6 +1110,7 @@
         head.style.cssText = `
             padding: 16px 24px; background: #2c2c34; color: #ffffff;
             display: flex; justify-content: space-between; align-items: center;
+            flex-shrink: 0;
         `;
         const title = document.createElement('div');
         title.style.cssText = 'font-size: 17px; font-weight: 700;';
@@ -1123,7 +1124,7 @@
 
         // 字段编辑区
         const fieldSection = document.createElement('div');
-        fieldSection.style.cssText = 'padding: 14px 24px; background: #f4f4f8; border-bottom: 1px solid #d8d8de; display: grid; grid-template-columns: 1fr 1fr 140px 110px; gap: 10px 14px; align-items: end;';
+        fieldSection.style.cssText = 'padding: 14px 24px; background: #f4f4f8; border-bottom: 1px solid #d8d8de; display: grid; grid-template-columns: 1fr 1fr 140px 110px; gap: 10px 14px; align-items: end; flex-shrink: 0;';
 
         function mkInput(labelText, key, value) {
             const wrap = document.createElement('div');
@@ -1165,7 +1166,7 @@
 
         // 题材选择
         const tagSection = document.createElement('div');
-        tagSection.style.cssText = 'padding: 14px 24px; background: #f4f4f8; border-bottom: 1px solid #d8d8de;';
+        tagSection.style.cssText = 'padding: 14px 24px; background: #f4f4f8; border-bottom: 1px solid #d8d8de; flex-shrink: 0; max-height: 28vh; overflow-y: auto;';
         const tagLabel = document.createElement('div');
         tagLabel.textContent = `题材（点击切换 · 共 ${data.题材.length} 项）`;
         tagLabel.style.cssText = 'font-size: 14px; color: #222; font-weight: 700; margin-bottom: 12px;';
@@ -1235,7 +1236,7 @@
         const ta = document.createElement('textarea');
         ta.spellcheck = false;
         ta.style.cssText = `
-            flex: 1; min-height: 320px;
+            flex: 1 1 0; min-height: 120px;
             border: none; padding: 20px 24px;
             font-size: 15px; line-height: 1.7;
             color: #111111; background: #ffffff;
@@ -1252,7 +1253,7 @@
         foot.style.cssText = `
             padding: 14px 24px; background: #ececf2;
             display: flex; gap: 10px; justify-content: flex-end; align-items: center;
-            border-top: 1px solid #ccc;
+            border-top: 1px solid #ccc; flex-shrink: 0; flex-wrap: wrap;
         `;
         const hint = document.createElement('div');
         hint.style.cssText = 'flex: 1; font-size: 12px; color: #444;';
