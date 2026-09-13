@@ -2,10 +2,10 @@
 
 ## 一、基本信息
 
-- **文件名**：`manga-obsidian.user.js`（版本号由脚本头 `@version` 维护，当前 1.8.1）
+- **文件名**：`manga-obsidian.user.js`（版本号由脚本头 `@version` 维护，当前 1.8.3）
 - **类型**：Tampermonkey / Greasemonkey 用户脚本
 - **用途**：在浏览器漫画详情页一键提取元数据 + 封面图，导出为 Obsidian 兼容的 Markdown 文件（YAML frontmatter 格式）
-- **代码量**：约 1346 行，纯 JavaScript，无外部依赖
+- **代码量**：约 1356 行，纯 JavaScript，无外部依赖
 - **运行环境**：浏览器端，通过 Tampermonkey 注入到匹配的页面
 
 ---
@@ -58,25 +58,26 @@ REGIONS    = ['', '日漫', '韩漫', '国漫', '港台', '欧美']  // 地区�
 ## 五、代码结构（按文件顺序）
 
 ```
-第 1-20 行    用户脚本头（@name, @match, @grant 等）
-第 22-37 行   全局常量（STATUS_MAP, DEFAULT_AGE, COVER_DIR, REGIONS）
-第 39-43 行   追更存储层（TRACK_KEY, loadTracker, saveTracker, trackKey）
-第 45-101 行  DOM 工具函数（text, linkTexts, parseChineseDate, getExtension, sanitizeFilename, isoDateOffset, parseRelativeDate, parseTitlePair）
-第 104-168 行 BakaMH 适配器（extractBakamh, canMountBakamh, waitBakamhReady）
-第 170-235 行 MangaCopy 适配器（extractMangacopy, canMountMangacopy, waitMangacopyReady）
-第 237-303 行 Komiic 适配器（extractKomiic, canMountKomiic, waitKomiicReady）
-第 305-371 行 BaoziMH 适配器（extractBaozimh, canMountBaozimh, waitBaozimhReady）
-第 373-436 行 18comic 适配器（extract18comic, canMount18comic, waitReady18comic）
-第 438-507 行 Bilibili 适配器（extractBilibili, canMountBilibili, waitBilibiliReady）
-第 509-588 行 WEBTOON 适配器（extractWebtoon, canMountWebtoon, waitWebtoonReady）
-第 590-627 行 各站点 parseChapters 函数（8 个，轻量话数提取，用于追更检测）
-第 629-640 行 ADAPTERS 分发表（域名 → 适配器函数映射 + 默认配置）
-第 642-660 行 YAML 工具函数（plain, wiki, splitMulti）
-第 662-708 行 buildMarkdown() — 生成 Obsidian YAML frontmatter
-第 710-760 行 下载函数（downloadBlob, downloadText, gmRequestBlob, gmRequestHtml, downloadImage）
-第 762-880 行 检测更新面板（openCheckPanel）
-第 882-970 行 UI 层（getTrackKey, isTracked, toggleTrack, refreshCheckBtn, mountButton）
-第 972-1346 行导出弹窗（openExportDialog）+ 初始化（init）
+第 1-25 行     用户脚本头（@name, @match, @grant 等）
+第 27-47 行    全局常量（STATUS_MAP, DEFAULT_AGE, COVER_DIR, REGIONS）
+第 49-53 行    追更存储层（TRACK_KEY, loadTracker, saveTracker, trackKey）
+第 55-111 行   DOM 工具函数（text, linkTexts, parseChineseDate, getExtension, sanitizeFilename, isoDateOffset, parseRelativeDate, parseTitlePair）
+第 113-177 行  BakaMH 适配器（getItemContentBakamh, extractBakamh, canMountBakamh, waitBakamhReady）
+第 179-244 行  MangaCopy 适配器（findInfoItemMangacopy, extractMangacopy, canMountMangacopy, waitMangacopyReady）
+第 246-312 行  Komiic 适配器（findKomiicSpec, extractKomiic, canMountKomiic, waitKomiicReady）
+第 314-380 行  BaoziMH 适配器（BZ_STATUS_TAGS, BZ_REGION_NORM, extractBaozimh, canMountBaozimh, waitBaozimhReady）
+第 382-445 行  18comic 适配器（extract18comic, canMount18comic, waitReady18comic）
+第 447-516 行  Bilibili 适配器（extractBilibili, canMountBilibili, waitBilibiliReady）
+第 518-595 行  WEBTOON 适配器（extractWebtoon, canMountWebtoon, waitWebtoonReady）
+第 597-636 行  各站点 parseChapters 函数（7 个，轻量话数提取，用于追更检测）
+第 638-649 行  ADAPTERS 分发表（域名 → 适配器函数映射 + 默认配置）
+第 651-669 行  YAML 工具函数（plain, wiki, splitMulti）
+第 671-717 行  buildMarkdown() — 生成 Obsidian YAML frontmatter
+第 719-783 行  下载函数（downloadBlob, downloadText, gmRequestBlob, downloadImage, gmRequestHtml）
+第 785-980 行  检测更新面板（openCheckPanel）
+第 982-1071 行 UI 层（getTrackKey, isTracked, toggleTrack, refreshCheckBtn, mountButton）
+第 1073-1334 行 导出弹窗（openExportDialog）
+第 1336-1356 行 初始化（init）+ 启动入口
 ```
 
 ---
@@ -210,14 +211,14 @@ REGIONS    = ['', '日漫', '韩漫', '国漫', '港台', '欧美']  // 地区�
 7. 检测完成后有更新的排最前面
 8. 每行有「🔗 访问」跳转和「取消追更」按钮
 
-### 7.4 parseChapters 函数（8 个）
+### 7.4 parseChapters 函数（7 个）
 
-每个站点一个轻量函数，只提取话数，不提取其他元数据：
+每个适配器一个轻量函数，只提取话数，不提取其他元数据。8 个站点共用 7 个函数——`www.2026copy.com` 复用 MangaCopy 的实现：
 
 | 站点 | 解析方式 |
 |---|---|
 | BakaMH | `ul.main.version-chap > li` 数量 |
-| MangaCopy | `a[href*="/chapter/"]` 去重计数 |
+| MangaCopy（含 2026copy） | `a[href*="/chapter/"]` 去重计数 |
 | Komiic | `a[href*="/chapter/"]` 去重计数 |
 | BaoziMH | `a[href*="comic_id="]` 去重计数 |
 | 18comic | `.episode ul.btn-toolbar a[href*="/photo/"]` 去重计数 |
@@ -245,6 +246,17 @@ REGIONS    = ['', '日漫', '韩漫', '国漫', '港台', '欧美']  // 地区�
   - 🖼 下载封面 → 下载封面图片
   - 💾 下载 MD → 下载 .md 文件
   - 📦 全部下载 → MD + 封面一起下载
+
+### 8.3 弹窗高度约束
+
+弹窗是 `max-height: 92vh` 的 flex 列容器且 `overflow: hidden`，各区块的伸缩规则决定了内容变多时谁让位：
+
+- `head` / `fieldSection` / `foot`：`flex-shrink: 0`，永不被裁剪
+- `tagSection`：`max-height: 28vh` + `overflow-y: auto`，题材多时自己滚动
+- 预览 textarea：`flex: 1 1 0` + `min-height: 120px`，优先让出空间
+- `foot`：`flex-wrap`，窗口窄时按钮换行而不是溢出
+
+早期版本 textarea 是 `flex: 1` + `min-height: 320px`（不可收缩），题材 chip 换到两三行后总高超过 92vh，底部按钮栏会被裁出可视区。
 
 ---
 
